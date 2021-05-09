@@ -63,89 +63,89 @@ func initializeEc2Client() (*ec2.Client, error) {
 
 func getSecurityGroupById(input *ec2.DescribeSecurityGroupsInput) (*types.SecurityGroup, error) {
 	output, err := ec2Client.DescribeSecurityGroups(context.TODO(), input)
-	
+
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if len(output.SecurityGroups) == 0 {
 		return nil, nil
 	}
-	
+
 	if len(output.SecurityGroups) > 1 {
 		log.Printf("Excpecting to get exactly 1 security group, got %v", len(output.SecurityGroups))
 		return nil, errors.New("DescribeSecurityGroups bad Results")
 	}
-	
+
 	return &output.SecurityGroups[0], nil
 }
 
 func GetSecurityGroupById(securityGroupId string) (*types.SecurityGroup, error) {
 	input := ec2.DescribeSecurityGroupsInput{}
-	
-	input.GroupIds = []string{ securityGroupId }
-	
+
+	input.GroupIds = []string{securityGroupId}
+
 	return getSecurityGroupById(&input)
 }
 
 func GetSecurityGroupByFilter(filterKey string, filterValue string) (*types.SecurityGroup, error) {
 	input := ec2.DescribeSecurityGroupsInput{}
-	
-	input.Filters = []types.Filter{ 
-		types.Filter { 
-			Name:  &filterKey,
-			Values: []string { filterValue },
+
+	input.Filters = []types.Filter{
+		types.Filter{
+			Name:   &filterKey,
+			Values: []string{filterValue},
 		},
 	}
-	
+
 	return getSecurityGroupById(&input)
 }
 
 func AuthorizeSecurityGroupIngress(securityGroupId string, port int32, cidr string, description string) error {
 	input := ec2.AuthorizeSecurityGroupIngressInput{}
-	
+
 	protocol := "tcp"
-	
+
 	input.GroupId = &securityGroupId
-	input.IpPermissions = []types.IpPermission {
-		types.IpPermission {
+	input.IpPermissions = []types.IpPermission{
+		types.IpPermission{
 			IpProtocol: &protocol,
-			FromPort: port,
-			ToPort: port,
-			IpRanges: []types.IpRange {
-				types.IpRange {
-					CidrIp: &cidr,
+			FromPort:   port,
+			ToPort:     port,
+			IpRanges: []types.IpRange{
+				types.IpRange{
+					CidrIp:      &cidr,
 					Description: &description,
 				},
 			},
 		},
 	}
-	
+
 	_, err := ec2Client.AuthorizeSecurityGroupIngress(context.TODO(), &input)
-	
+
 	return err
 }
 
 func RevokeSecurityGroupIngress(securityGroupId string, port int32, cidr string) error {
 	input := ec2.RevokeSecurityGroupIngressInput{}
-	
+
 	protocol := "tcp"
-	
+
 	input.GroupId = &securityGroupId
-	input.IpPermissions = []types.IpPermission {
-		types.IpPermission {
+	input.IpPermissions = []types.IpPermission{
+		types.IpPermission{
 			IpProtocol: &protocol,
-			FromPort: port,
-			ToPort: port,
-			IpRanges: []types.IpRange {
-				types.IpRange {
+			FromPort:   port,
+			ToPort:     port,
+			IpRanges: []types.IpRange{
+				types.IpRange{
 					CidrIp: &cidr,
 				},
 			},
 		},
 	}
-	
+
 	_, err := ec2Client.RevokeSecurityGroupIngress(context.TODO(), &input)
-	
+
 	return err
 }
